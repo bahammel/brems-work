@@ -24,7 +24,9 @@ device = torch.device('cpu')
 
 # N is batch size; D_in is input dimension;
 # H is hidden dimension; D_out is output dimension.
-N, D_in, H, D_out = 1, 100, 10, 100
+n = 1000
+N, D_in, H, D_out = 1, n, 10, n
+EPOCHS = 20_000
 
 # Create random Tensors to hold input and outputs
 # x = torch.randn(N, D_in, device=device)
@@ -32,15 +34,15 @@ N, D_in, H, D_out = 1, 100, 10, 100
 # x = torch.randn(1, device=device)
 # y = torch.randn(1, device=device)
 
-n = 100
+
+
 x = torch.linspace(1, 5, n).reshape(1, n)
 
 # Create random Tensors for weights; setting requires_grad=True means that we
 # want to compute gradients for these Tensors during the backward pass.
 w1 = torch.randn(D_in, D_in, device=device, requires_grad=True)
 w2 = torch.randn(D_out, D_out, device=device, requires_grad=True)
-# w1 = torch.randn(D_in, device=device, requires_grad=True)
-# w2 = torch.randn(D_in, device=device, requires_grad=True)
+
 
 # Here we generate some fake data
 
@@ -69,25 +71,34 @@ def brems(ne, kTe, Z, x):
     y = 1.e-5 * 5.34e-39 * Z**2. * ne**2.* (1.6e-12 * kTe)**-0.5 * np.exp(-x/kTe)  + 1.0 * torch.randn(1, n, device=device)
     return x, y
 
-# x, y = brems(ne, kTe, Z, x)
-# x, y = quad(a, b, c, x)
-x, y = lin(a, b, x)
+def normalize(x, y):
+     y_norm = (y-y.min())/(y.max()-y.min() + 1e-6)
+     x_norm = (x-x.min())/(x.max()-x.min() + 1e-6)
+     return x_norm, y_norm
+
+def sigmoid(z):
+     return torch.sigmoid(z)
+
+# x_true, y_true = brems(ne, kTe, Z, x)
+# x_true, y_true = quad(a, b, c, x)
+x_true, y_true = lin(a, b, x)
 
 
-plt.scatter(x,y, s=8); plt.xlabel("x"); plt.ylabel("y");
+x, y = normalize(x_true, y_true)
 
-# def mse(y_hat, y): return ((y_hat - y) ** 2).mean()
-# def mse_loss(w1, w2, x, y): return mse(lin(w1,w2,x), y)
+plt.scatter(x, y, s=8);
+plt.xlabel("x"); plt.ylabel("y")
 
-learning_rate = 1.e-10
-for t in range(300_000):
+learning_rate = 1.e-5
+for t in range(EPOCHS):
   # Forward pass: compute predicted y using operations on Tensors. Since w1 and
   # w2 have requires_grad=True, operations involving these Tensors will cause
   # PyTorch to build a computational graph, allowing automatic computation of
   # gradients. Since we are no longer implementing the backward pass by hand we
   # don't need to keep references to intermediate values.
     
-    y_pred = x.mm(w1).clamp(min=0).mm(w2)
+    # y_pred = x.mm(w1).clamp(min=0).mm(w2)
+    y_pred = sigmoid(x.mm(w1)).mm(w2)
 
   # Compute and print loss. Loss is a Tensor of shape (), and loss.item()
   # is a Python number giving its value.
@@ -123,7 +134,9 @@ for t in range(300_000):
       
 
 plt.plot(x.data.numpy(), y_pred.data.numpy(), 'go')
-plt.ylim(0.1,175.)
+plt.xlim(0.0,1.0)
+plt.ylim(0.0,1.0)
+
 plt.figure()
 plt.plot(losses)
 plt.yscale('log')
