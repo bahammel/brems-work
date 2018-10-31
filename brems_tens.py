@@ -25,18 +25,18 @@ device = torch.device('cpu')
 # N is batch size; D_in is input dimension;
 # H is hidden dimension; D_out is output dimension.
 N, D_in, H, D_out = 1, 100, 100, 100
-EPOCHS = 7_000
+EPOCHS = 20_000
 
 # Create random Tensors to hold input and outputs
 # x = torch.randn(N, D_in, device=device)
 # y = torch.randn(N, D_out, device=device)
-x = torch.randn(1, device=device)
-y = torch.randn(1, device=device)
+# x = torch.randn(1, device=device)
+# y = torch.randn(1, device=device)
 
 # Create random Tensors for weights; setting requires_grad=True means that we
 # want to compute gradients for these Tensors during the backward pass.
-w1 = torch.rand((D_in, D_in), device=device, requires_grad=True)
-w2 = torch.rand((D_out, D_out), device=device, requires_grad=True)
+w1 = torch.randn((D_in, D_in), device=device, requires_grad=True)
+w2 = torch.randn((D_out, D_out), device=device, requires_grad=True)
 # w1 = torch.randn(D_in, device=device, requires_grad=True)
 # w2 = torch.randn(D_in, device=device, requires_grad=True)
 
@@ -58,33 +58,39 @@ def brems(n, ne, kTe, Z):
     y = 1.e-5 * 5.34e-39 * Z**2. * ne**2.* (1.6e-12 * kTe)**-0.5 * np.exp(-x/kTe)  + 1.0 * torch.randn(1, n, device=device)
     return x, y
 
-def normalize(y):
+def normalize(x, y):
     y_norm = (y-y.min())/(y.max()-y.min())
-    rescale_factor = y/(y_norm + 1e-6)
-    return rescale_factor, y_norm
+    x_norm = (x-x.min())/(x.max()-x.min())
+    return x_norm, y_norm
 
-x, y_true = brems(n, ne, kTe, Z)
+def sigmoid(z):
+    return torch.sigmoid(z)
 
-plt.scatter(x, y_true, s=8); plt.xlabel("x"); plt.ylabel("y");
+x_true, y_true = brems(n, ne, kTe, Z)
+
 
 # def mse(y_hat, y): return ((y_hat - y) ** 2).mean()
 # def mse_loss(w1, w2, x, y): return mse(lin(w1,w2,x), y)
 
-rescale_factor, y = normalize(y_true)
+x, y = normalize(x_true, y_true)
 
-learning_rate = 1e-9
+plt.scatter(x, y, s=8);
+plt.xlabel("x")
+plt.ylabel("y")
+
+learning_rate = 1e-5
 for t in range(EPOCHS):
     # Forward pass: compute predicted y using operations on Tensors. Since w1 and
     # w2 have requires_grad=True, operations involving these Tensors will cause
     # PyTorch to build a computational graph, allowing automatic computation of
     # gradients. Since we are no longer implementing the backward pass by hand we
     # don't need to keep references to intermediate values.
-    y_pred = x.mm(w1).clamp(min=0).mm(w2)
+    y_pred = sigmoid(x.mm(w1)).mm(w2)
 
     # Compute and print loss. Loss is a Tensor of shape (), and loss.item()
     # is a Python number giving its value.
 
-    # regulizer = 1e-4*(w2.pow(2).sum() + w1.pow(2).sum())
+    # regulizer = 1e-1*(w2.pow(2).sum() + w1.pow(2).sum())
     loss = (y_pred - y).pow(2).sum() # + regulizer
     # print(t, loss.item())
     
@@ -118,10 +124,8 @@ for t in range(EPOCHS):
         print(f"epoch={t}, loss={loss}")
 
 
-y_ = y_pred.data.numpy() * rescale_factor.data.numpy()
-
-plt.plot(x.data.numpy(), y_, 'go')
-plt.ylim(0.1,175.)
+plt.plot(x.data.numpy(), y_pred.data.numpy(), 'go')
+# plt.ylim(0.1,175.)
 plt.figure()
 plt.plot(losses)
 plt.yscale('log')
