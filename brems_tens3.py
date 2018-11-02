@@ -24,7 +24,7 @@ device = torch.device('cpu')
 
 # N is batch size; D_in is input dimension;
 # H is hidden dimension; D_out is output dimension.
-n = 1000
+n = 100
 N, D_in, H, D_out = 1, n, 10, n
 EPOCHS = 20_000
 
@@ -36,7 +36,7 @@ EPOCHS = 20_000
 
 
 
-x = torch.linspace(1, 5, n).reshape(1, n)
+x = torch.linspace(1, 5, n).reshape(3, n)
 
 # Create random Tensors for weights; setting requires_grad=True means that we
 # want to compute gradients for these Tensors during the backward pass.
@@ -61,14 +61,15 @@ def quad(a,b,c,x):
 Z = 1.
 ne = 1.e20
 ni = ne
-kTe = 1.
+# kTe = torch.linspace(1, 3, 3).reshape(n,3)
+kTe = torch.tensor([1., 2., 3.])
 
 def brems(ne, kTe, Z, x):
     # x = torch.randn(1, n, device=device) 
     # y = lin(u1,u2,x) + 0.01 * torch.randn(1, n, device=device)
     # x = torch.linspace(1, 5, n)
     # y = 1.e-5 * 5.34e-39 * Z**2. * ne**2.* (1.6e-12 * kTe)**-0.5 * np.exp(-x/kTe)
-    y = 1.e-5 * 5.34e-39 * Z**2. * ne**2.* (1.6e-12 * kTe)**-0.5 * np.exp(-x/kTe)  + 1.0 * torch.randn(1, n, device=device)
+    y = 1.e-5 * 5.34e-39 * Z**2. * ne**2.* (1.6e-12 * kTe(...,))**-0.5 * np.exp(-x/kTe(...,))  + 1.0 * torch.randn(1, n, device=device)
     return x, y
 
 def normalize(x, y):
