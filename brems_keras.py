@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import matplotlib.pyplot as plt
 from keras import layers, models, callbacks
 import utils
