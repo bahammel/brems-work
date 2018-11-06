@@ -15,7 +15,7 @@ device = torch.device('cpu')
 # N is batch size; D_in is input dimension;
 # H is hidden dimension; D_out is output dimension.
 n = 100
-N, D_in, H, D_out = 1, n, 10, n
+N, D_in, H, D_out = 1, 2, 10, 1
 EPOCHS = 10_000
 epoch = 3
 
@@ -38,7 +38,7 @@ loss_fn = torch.nn.MSELoss(reduction='sum')
 
 
 
-x = torch.linspace(1, 5, n).reshape(1, n)
+x = torch.linspace(1, 5, n).reshape(N, n)
 
 # Create random Tensors for weights; setting requires_grad=True means that we
 # want to compute gradients for these Tensors during the backward pass.
@@ -98,7 +98,11 @@ for epoch in range(epoch):
         # Forward pass: compute predicted y by passing x to the model.
         y_pred = model(x)
         # y = f( x(hu, kTe))
-        # 
+        # x = [[hu_1, kTe_1],
+        #      [hu_2, kTe_1],
+        #      [hu_1, kTe_4],
+        #      [hu_100, kTe_2],
+        #       ....
 
         # Compute and print loss.
         loss = loss_fn(y_pred, y)
