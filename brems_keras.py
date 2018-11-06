@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import matplotlib.pyplot as plt
 from keras import layers, models, callbacks
 import utils
@@ -38,6 +39,18 @@ if __name__ == '__main__':
     )
 
     utils.plot_loss(history.history['loss'], history.history['val_loss'])
+
+    fig = plt.figure('test', dpi=100, figsize=(5, 4))
+    I_ = model.predict(xtest)
+    hu, _ = list(zip(*xtest))
+    plt.plot(hu, ytest, 'o')
+    plt.plot(hu, I_, 'o')
+
+    fig = plt.figure('train', dpi=100, figsize=(5, 4))
+    I_ = model.predict(xtrain)
+    hu, _ = list(zip(*xtrain))
+    plt.plot(hu, ytrain, 'o')
+    plt.plot(hu, I_, 'o')
 
     fig = plt.figure('test', dpi=100, figsize=(5, 4))
     I_ = model.predict(xtest)
