@@ -15,29 +15,20 @@ device = torch.device('cuda') # Uncomment this to run on GPU
 torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 # D_in is input dimension; H is hidden dimension; D_out is output dimension.
-BATCH_SZ, D_in, H, D_out = 128, 2, 10, 1
+BATCH_SZ, D_in, H, D_out = 128, 2, 800, 1
 
-EPOCHS = 20000
+EPOCHS = 500
 
 model = torch.nn.Sequential(
     torch.nn.Linear(D_in, H),
-    # torch.nn.ReLU(),
     torch.nn.Sigmoid(),
-    # torch.nn.functional.sigmoid(),
     torch.nn.Linear(H, H),
     torch.nn.Sigmoid(),
-    # torch.nn.functional.sigmoid(),
     torch.nn.Linear(H, D_out),
 )
 model.cuda()
 
 loss_fn = torch.nn.MSELoss()
-
-
-# Use the optim package to define an Optimizer that will update the weights of
-# the model for us. Here we will use Adam; the optim package contains many other
-# optimization algoriths. The first argument to the Adam constructor tells the
-# optimizer which Tensors it should update.
 
 learning_rate = 1e-4
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)

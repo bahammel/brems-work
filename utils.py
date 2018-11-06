@@ -1,8 +1,5 @@
 import numpy as np
-<<<<<<< HEAD
 import matplotlib.pyplot as plt
-=======
->>>>>>> Try batched brems learning
 from sklearn.model_selection import train_test_split
 import torch
 
@@ -18,11 +15,7 @@ def brems(ne, kTe, Z, x):
 
 
 def get_data():
-<<<<<<< HEAD
     kTe = np.linspace(1000, 5000, 5)
-=======
-    kTe = np.linspace(1000, 5000, 2)
->>>>>>> Try batched brems learning
     x = np.linspace(1000, 5100, 1000)
 
     X = []
@@ -35,11 +28,7 @@ def get_data():
 
     xtrain, xtest, ytrain, ytest = train_test_split(X, Y)
 
-<<<<<<< HEAD
     return map(np.asarray, [xtrain, xtest, ytrain, ytest])
-=======
-    return xtrain, xtest, ytrain, ytest
->>>>>>> Try batched brems learning
 
 
 def normalize(y, params=None):
@@ -56,7 +45,6 @@ def normalize(y, params=None):
     return mu, std, (y - mu) / std
 
 
-<<<<<<< HEAD
 def plot_data(train, test):
     fig = plt.figure(dpi=100, figsize=(5, 4))
     xtrain, ytrain = train
@@ -79,8 +67,6 @@ def plot_loss(train_loss, test_loss):
 
 
 
-=======
->>>>>>> Try batched brems learning
 if __name__ == '__main__':
     """
     Y = [
