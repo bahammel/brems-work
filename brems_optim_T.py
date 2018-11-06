@@ -11,11 +11,12 @@ ni = ne
 plt.close('all')
 losses = []
 
-device = torch.device('cuda') # Uncomment this to run on GPU
-torch.set_default_tensor_type('torch.cuda.FloatTensor')
+# device = torch.device('cuda') # Uncomment this to run on GPU
+# torch.set_default_tensor_type('torch.cuda.FloatTensor')
+torch.set_default_tensor_type('torch.FloatTensor')
 
 # D_in is input dimension; H is hidden dimension; D_out is output dimension.
-BATCH_SZ, D_in, H, D_out = 128, 2, 800, 1
+BATCH_SZ, D_in, H, D_out = 128, 2, 1600, 1
 
 EPOCHS = 500
 
@@ -26,7 +27,7 @@ model = torch.nn.Sequential(
     torch.nn.Sigmoid(),
     torch.nn.Linear(H, D_out),
 )
-model.cuda()
+# model.cuda()
 
 loss_fn = torch.nn.MSELoss()
 
@@ -40,8 +41,8 @@ fig = plt.figure(dpi=100, figsize=(5, 4))
 
 xtrain, xtest, ytrain, ytest = get_data()
 
-# *params, ytest = normalize(ytest)
-# *_, ytrain = normalize(ytrain, params=params)
+*params, ytest = normalize(ytest)
+*_, ytrain = normalize(ytrain, params=params)
 
 hu_train, _ = zip(*xtrain)
 hu_test, _ = zip(*xtest)
