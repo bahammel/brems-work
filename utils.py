@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import sklearn
 from sklearn.model_selection import train_test_split
 import torch
 
@@ -13,6 +14,22 @@ def brems(ne, kTe, Z, x):
     y = 1.e-5 * 5.34e-39 * Z**2. * ne**2.* (1.6e-12 * kTe)**-0.5 * np.exp(-x/kTe)    
     return y
 
+
+def get_data_2():
+    kTe = np.linspace(1000, 6000, 2)
+    x = np.linspace(1000, 5000, 51)
+
+    X = []
+    Y = []
+
+    for t in kTe:
+        for i in x:
+            Y.append([t])
+            X.append([i, brems(ne, t, Z, i)])
+
+    xtrain, xtest, ytrain, ytest = train_test_split(X, Y)
+
+    return map(np.asarray, [xtrain, xtest, ytrain, ytest])
 
 def get_data():
     kTe = np.linspace(1000, 5000, 5)
@@ -84,4 +101,4 @@ if __name__ == '__main__':
     ]
     """
 
-    xtrain, xtest, ytrain, ytest = get_data()
+    # xtrain, xtest, ytrain, ytest = get_data()
