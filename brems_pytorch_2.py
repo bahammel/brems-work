@@ -5,29 +5,30 @@ import torch
 
 plt.ion()
 plt.close('all')
-# device = torch.device('cuda') # Uncomment this to run on GPU
-# torch.set_default_tensor_type('torch.cuda.FloatTensor')
-torch.set_default_tensor_type('torch.FloatTensor')
+device = torch.device('cuda') # Uncomment this to run on GPU
+torch.set_default_tensor_type('torch.cuda.FloatTensor')
+# torch.set_default_tensor_type('torch.FloatTensor')
 
 BATCH_SZ, D_in_1, H, D_out = 32, 2, 200, 1
-EPOCHS = 50000
+EPOCHS = 10000
 
 
 if __name__ == '__main__':
     model = torch.nn.Sequential(
+        torch.nn.BatchNorm1d(2),
         torch.nn.Linear(D_in_1, H),
         torch.nn.Sigmoid(),
         torch.nn.Linear(H, H),
         torch.nn.Sigmoid(),
         torch.nn.Linear(H, D_out),
     )
-    # model.cuda()
+    model.cuda()
 
     loss_fn = torch.nn.MSELoss()
 
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, min_lr=1e-6, patience=20, factor=.2
+        optimizer, min_lr=1e-6, patience=200, factor=.2
     )
 
     train_losses = []
