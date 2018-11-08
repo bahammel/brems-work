@@ -33,7 +33,7 @@ def get_data_2():
     return map(np.asarray, [xtrain, xtest, ytrain, ytest])
 
 def get_data():
-    kTe = np.linspace(1000, 5000, 5)
+    kTe = np.linspace(1, 5, 5)
     x = np.linspace(1000, 5100, 1000)
 
     X = []
