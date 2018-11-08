@@ -10,7 +10,7 @@ plt.close('all')
 torch.set_default_tensor_type('torch.FloatTensor')
 
 BATCH_SZ, D_in_1, H, D_out = 32, 2, 200, 1
-EPOCHS = 50000
+EPOCHS = 10000
 
 
 if __name__ == '__main__':

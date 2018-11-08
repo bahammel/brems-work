@@ -11,12 +11,13 @@ ni = ne
 
 
 def brems(ne, kTe, Z, x):
+    kTe *= 1e3
     y = 1.e-5 * 5.34e-39 * Z**2. * ne**2.* (1.6e-12 * kTe)**-0.5 * np.exp(-x/kTe)    
     return y
 
 
 def get_data_2():
-    kTe = np.linspace(1000, 6000, 2)
+    kTe = np.linspace(1, 6, 2)
     x = np.linspace(1000, 5000, 51)
 
     X = []
