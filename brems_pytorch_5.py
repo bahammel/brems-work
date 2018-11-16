@@ -6,6 +6,7 @@ import torch.nn as nn
 from datetime import datetime
 from logger import Logger
 from mpl_toolkits.mplot3d import Axes3D
+from sklearn.utils import shuffle
 
 
 plt.ion()
@@ -51,17 +52,20 @@ if __name__ == '__main__':
     xtrain, xtest, ytrain, ytest = utils_3.get_data_3()
     utils_3.plot_data((xtrain, ytrain), (xtest, ytest))
 
-    xtrain = torch.Tensor(xtrain)
-    ytrain = torch.Tensor(ytrain)
-    xtest = torch.Tensor(xtest)
-    ytest = torch.Tensor(ytest)
 
     for epoch in range(EPOCHS):
 
+        xtrain, ytrain = shuffle(xtrain, ytrain)
+
+        Xtrain = torch.Tensor(xtrain)
+        Ytrain = torch.Tensor(ytrain)
+        Xtest = torch.Tensor(xtest)
+        Ytest = torch.Tensor(ytest)
+
         train_losses = []
         for batch_idx in range(len(xtrain) // BATCH_SZ):
-            x_batch = xtrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
-            y_batch = ytrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
+            x_batch = Xtrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
+            y_batch = Ytrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
 
             y_pred = model(x_batch)
 
@@ -87,7 +91,8 @@ if __name__ == '__main__':
         #                        Tensorboard Logging                         #
         # ================================================================== #
         if epoch % 10 == 0:
-            train_loss = np.mean(train_losses)
+            _train_loss = np.mean(train_losses)
+            train_loss = loss.item()
 
             print(f"epoch: {epoch}, train loss: {train_loss}")
 
