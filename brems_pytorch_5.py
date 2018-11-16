@@ -18,7 +18,7 @@ torch.set_default_tensor_type(
     'torch.cuda.FloatTensor' if USE_GPU else 'torch.FloatTensor'
 )
 
-BATCH_SZ, D_in_1, H, D_out = 32, 2, 200, 2
+BATCH_SZ, D_in_1, H, D_out = 32, 2, 1600, 2
 EPOCHS = 10_000
 
 
@@ -38,9 +38,9 @@ if __name__ == '__main__':
     loss_fn = torch.nn.MSELoss()
     best_loss = float('inf')
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, min_lr=1e-6, patience=100, factor=.5, verbose=True,
+        optimizer, min_lr=1e-6, patience=200, factor=.5, verbose=True,
     )
 
     experiment_id = datetime.now().isoformat()
@@ -72,9 +72,6 @@ if __name__ == '__main__':
 
             train_losses.append(loss.item())
 
-        optimizer.step()
-        lr_scheduler.step(loss)
-        train_loss = np.mean(train_losses)
 
         # y_pred = model(xtest)
         # test_loss = loss_fn(y_pred, ytest)
@@ -88,6 +85,7 @@ if __name__ == '__main__':
         #                        Tensorboard Logging                         #
         # ================================================================== #
         if epoch % 10 == 0:
+            train_loss = np.mean(train_losses)
 
             test_losses = []
             for batch_idx in range(len(xtest) // BATCH_SZ):
@@ -128,6 +126,8 @@ if __name__ == '__main__':
                 torch.save(model, f'/hdd/bahammel/checkpoint/{experiment_id}')
                 best_loss = test_loss
 
+        optimizer.step()
+        lr_scheduler.step(loss)
 
     I_ = model(xtest)
 
