@@ -1,0 +1,30 @@
+# coding: utf-8
+d = {'one':1, 'two':2, 'three':6}
+d.keys()
+d.values()
+d.items()
+for k, v in d.items():
+    print(k, v)
+    
+for stuff in d.items():
+    print(stuff)
+    
+for stuff in d.items():
+    i, j = stuff
+    print(i)
+    print(j)
+    print('-'*10)
+    
+    
+a = [1,2,3,4,5]
+for i in range(len(a)):
+    print(a[i])
+    
+for x in a:
+    print(x)
+    
+    
+for i, x in enumerate(a):
+    print(i, 'is',  x)
+
+%save -r mysession 1-999999
