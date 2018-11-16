@@ -18,8 +18,8 @@ torch.set_default_tensor_type(
     'torch.cuda.FloatTensor' if USE_GPU else 'torch.FloatTensor'
 )
 
-BATCH_SZ, D_in_1, H, D_out = 32, 2, 800, 2
-EPOCHS = 100
+BATCH_SZ, D_in_1, H, D_out = 32, 2, 1600, 2
+EPOCHS = 10_000
 
 
 if __name__ == '__main__':
@@ -38,9 +38,9 @@ if __name__ == '__main__':
     loss_fn = torch.nn.MSELoss()
     best_loss = float('inf')
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, min_lr=1e-6, patience=200, factor=.5, verbose=True,
+        optimizer, min_lr=1e-6, patience=100, factor=.5, verbose=True,
     )
 
     experiment_id = datetime.now().isoformat()
@@ -58,6 +58,7 @@ if __name__ == '__main__':
 
     for epoch in range(EPOCHS):
 
+        train_losses = []
         for batch_idx in range(len(xtrain) // BATCH_SZ):
             x_batch = xtrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
             y_batch = ytrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
@@ -69,8 +70,11 @@ if __name__ == '__main__':
             optimizer.zero_grad()
             loss.backward()
 
+            train_losses.append(loss.item())
+
         optimizer.step()
         lr_scheduler.step(loss)
+        train_loss = np.mean(train_losses)
 
         # y_pred = model(xtest)
         # test_loss = loss_fn(y_pred, ytest)
@@ -84,9 +88,20 @@ if __name__ == '__main__':
         #                        Tensorboard Logging                         #
         # ================================================================== #
         if epoch % 10 == 0:
-            train_loss = loss.item()
 
-            print(f"epoch: {epoch}, train loss: {train_loss}")
+            test_losses = []
+            for batch_idx in range(len(xtest) // BATCH_SZ):
+                x_batch = xtest[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
+                y_batch = xtest[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
+
+                y_pred = model(x_batch)
+
+                loss = loss_fn(y_pred, y_batch)
+                test_losses.append(loss.item())
+
+            test_loss = np.mean(test_losses)
+
+            print(f"epoch: {epoch}, train loss: {train_loss}, test_loss: {test_loss}")
 
             lrs = set([layer['lr'] for layer in optimizer.param_groups])
 
@@ -99,6 +114,7 @@ if __name__ == '__main__':
                 logger.scalar_summary('lr', list(lrs)[0], epoch)
 
             logger.scalar_summary('loss', train_loss, epoch)
+            logger.scalar_summary('test_loss', test_loss, epoch)
 
             # 2. Log values and gradients of the parameters (histogram summary)
             # curious to see if this works!
@@ -108,9 +124,9 @@ if __name__ == '__main__':
                 logger.histo_summary(tag+'/grad', value.grad.data.cpu().numpy(), epoch)
 
 
-            if best_loss < train_loss:
+            if best_loss < test_loss:
                 torch.save(model, f'/hdd/bahammel/checkpoint/{experiment_id}')
-                best_loss = train_loss
+                best_loss = test_loss
 
 
     I_ = model(xtest)
