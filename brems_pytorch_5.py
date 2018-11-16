@@ -4,29 +4,22 @@ import utils_3
 import torch
 import torch.nn as nn
 from datetime import datetime
-# import torchvision
-# from torchvision import transforms
 from logger import Logger
 from mpl_toolkits.mplot3d import Axes3D
-
-# logger.scalar_summary('test loss', test_loss, step+1)
-
-
-# like a CNN <-- easier or RNN <-- harder
-#
-# Yeah we should be about to use data from the surrounding points. 
-# but.. the NN architecture gets a lot harder...
-
 
 
 plt.ion()
 plt.close('all')
-device = torch.device('cuda') # Uncomment this to run on GPU
-torch.set_default_tensor_type('torch.cuda.FloatTensor')
-# torch.set_default_tensor_type('torch.FloatTensor')
 
-BATCH_SZ, D_in_1, H, D_out = 32, 2, 3200, 2
-EPOCHS = 1000000
+USE_GPU = torch.cuda.is_available()
+
+device = torch.device('cuda' if USE_GPU else 'cpu')
+torch.set_default_tensor_type(
+    'torch.cuda.FloatTensor' if USE_GPU else 'torch.FloatTensor'
+)
+
+BATCH_SZ, D_in_1, H, D_out = 32, 2, 800, 2
+EPOCHS = 100
 
 
 if __name__ == '__main__':
@@ -38,23 +31,22 @@ if __name__ == '__main__':
         torch.nn.Sigmoid(),
         torch.nn.Linear(H, D_out),
     )
-    model.cuda()
+
+    if USE_GPU:
+        model.cuda()
 
     loss_fn = torch.nn.MSELoss()
+    best_loss = float('inf')
 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, min_lr=1e-6, patience=200, factor=.2
+        optimizer, min_lr=1e-6, patience=200, factor=.5, verbose=True,
     )
-
-    train_losses = []
-    test_losses = []
 
     experiment_id = datetime.now().isoformat()
     print('Logging experiment as: ', experiment_id)
 
-    logger = Logger(f'./logs/{experiment_id}')  # not 100% sure this will work... but it should
-    # I think it will
+    logger = Logger(f'/hdd/bahammel/tensorboard/{experiment_id}')
 
     xtrain, xtest, ytrain, ytest = utils_3.get_data_3()
     utils_3.plot_data((xtrain, ytrain), (xtest, ytest))
@@ -66,8 +58,6 @@ if __name__ == '__main__':
 
     for epoch in range(EPOCHS):
 
-        epoch_loss = []
-
         for batch_idx in range(len(xtrain) // BATCH_SZ):
             x_batch = xtrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
             y_batch = ytrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
@@ -75,65 +65,53 @@ if __name__ == '__main__':
             y_pred = model(x_batch)
 
             loss = loss_fn(y_pred, y_batch)
-            epoch_loss.append(loss.item())
 
             optimizer.zero_grad()
             loss.backward()
-            optimizer.step()
-            lr_scheduler.step(loss)
-            # optim.param_groups[0]['lr']
+
+        optimizer.step()
+        lr_scheduler.step(loss)
 
         # y_pred = model(xtest)
-
         # test_loss = loss_fn(y_pred, ytest)
-        # test_losses.append(test_loss)
-        avg_loss = np.mean(epoch_loss)
-        train_losses.append(avg_loss)
 
-        # Compute accuracy
-        _, argmax = torch.max(y_pred, 1)
+        # Compute accuracy -- Not used
+        #  _, argmax = torch.max(y_pred, 1)
         # accuracy = (labels == argmax.squeeze()).float().mean()
-        accuracy = (argmax.squeeze()).float().mean()
+        # accuracy = (argmax.squeeze()).float().mean()
 
+        # ================================================================== #
+        #                        Tensorboard Logging                         #
+        # ================================================================== #
+        if epoch % 10 == 0:
+            train_loss = loss.item()
 
-        if (epoch+1) % 100 == 0:
-            print ('epoch [{}/{}], Loss: {:.4f}, Acc: {:.2f}' 
-               .format(epoch+1, EPOCHS, loss.item(), accuracy.item()))
+            print(f"epoch: {epoch}, train loss: {train_loss}")
 
-            # ================================================================== #
-            #                        Tensorboard Logging                         #
-            # ================================================================== #
+            lrs = set([layer['lr'] for layer in optimizer.param_groups])
 
-            # 1. Log scalar values (scalar summary)
-            info = { 'loss': loss.item(), 'accuracy': accuracy.item() }
+            try:
+                assert len(lrs) == 1
+            except AssertionError as e:
+                for i, layer in enumerate(optimizer.param_groups):
+                    logger.scalar_summary(f'lr_{i}', layer['lr'], epoch)
+            else:
+                logger.scalar_summary('lr', list(lrs)[0], epoch)
 
-            for tag, value in info.items():
-                logger.scalar_summary(tag, value, epoch+1)
+            logger.scalar_summary('loss', train_loss, epoch)
 
             # 2. Log values and gradients of the parameters (histogram summary)
             # curious to see if this works!
             for tag, value in model.named_parameters():
                 tag = tag.replace('.', '/')
-                logger.histo_summary(tag, value.data.cpu().numpy(), epoch+1)  # might have to be value.data.gpu() ... but not sure
-                logger.histo_summary(tag+'/grad', value.grad.data.cpu().numpy(), epoch+1)
+                logger.histo_summary(tag, value.data.cpu().numpy(), epoch)
+                logger.histo_summary(tag+'/grad', value.grad.data.cpu().numpy(), epoch)
 
 
-            # thats a good sign!
+            if best_loss < train_loss:
+                torch.save(model, f'/hdd/bahammel/checkpoint/{experiment_id}')
+                best_loss = train_loss
 
-            # yeah that makes sense
-            # 3. Log training images (image summary)
-            # info = { 'images': images.view(-1, 28, 28)[:10].cpu().numpy() }
-
-            # for tag, images in info.items():
-                # logger.image_summary(tag, images, epoch+1)
-
-        if epoch % (EPOCHS/100) == 0:
-            print('-'*100)
-            print(f"epoch: {epoch}, train loss: {avg_loss}")
-            #print(f"epoch: {epoch}, test loss: {test_loss}")
-
-
-    utils_3.plot_loss(train_losses, test_losses)
 
     I_ = model(xtest)
 
