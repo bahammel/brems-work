@@ -19,7 +19,7 @@ torch.set_default_tensor_type(
 )
 
 BATCH_SZ, D_in_1, H, D_out = 32, 2, 800, 2
-EPOCHS = 100
+EPOCHS = 10_000
 
 
 if __name__ == '__main__':
