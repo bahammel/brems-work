@@ -2,7 +2,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import utils_3
 import torch
+import torch.nn as nn
+from datetime import datetime
+# import torchvision
+# from torchvision import transforms
+from logger import Logger
 from mpl_toolkits.mplot3d import Axes3D
+
+# logger.scalar_summary('test loss', test_loss, step+1)
+
+
+# like a CNN <-- easier or RNN <-- harder
+#
+# Yeah we should be about to use data from the surrounding points. 
+# but.. the NN architecture gets a lot harder...
+
+
 
 plt.ion()
 plt.close('all')
@@ -10,8 +25,8 @@ device = torch.device('cuda') # Uncomment this to run on GPU
 torch.set_default_tensor_type('torch.cuda.FloatTensor')
 # torch.set_default_tensor_type('torch.FloatTensor')
 
-BATCH_SZ, D_in_1, H, D_out = 32, 2, 1600, 2
-EPOCHS = 200000
+BATCH_SZ, D_in_1, H, D_out = 32, 2, 3200, 2
+EPOCHS = 1000000
 
 
 if __name__ == '__main__':
@@ -34,6 +49,12 @@ if __name__ == '__main__':
 
     train_losses = []
     test_losses = []
+
+    experiment_id = datetime.now().isoformat()
+    print('Logging experiment as: ', experiment_id)
+
+    logger = Logger(f'./logs/{experiment_id}')  # not 100% sure this will work... but it should
+    # I think it will
 
     xtrain, xtest, ytrain, ytest = utils_3.get_data_3()
     utils_3.plot_data((xtrain, ytrain), (xtest, ytest))
@@ -60,7 +81,7 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
             lr_scheduler.step(loss)
-            optim.param_groups[0]['lr']
+            # optim.param_groups[0]['lr']
 
         # y_pred = model(xtest)
 
@@ -68,6 +89,43 @@ if __name__ == '__main__':
         # test_losses.append(test_loss)
         avg_loss = np.mean(epoch_loss)
         train_losses.append(avg_loss)
+
+        # Compute accuracy
+        _, argmax = torch.max(y_pred, 1)
+        # accuracy = (labels == argmax.squeeze()).float().mean()
+        accuracy = (argmax.squeeze()).float().mean()
+
+
+        if (epoch+1) % 100 == 0:
+            print ('epoch [{}/{}], Loss: {:.4f}, Acc: {:.2f}' 
+               .format(epoch+1, EPOCHS, loss.item(), accuracy.item()))
+
+            # ================================================================== #
+            #                        Tensorboard Logging                         #
+            # ================================================================== #
+
+            # 1. Log scalar values (scalar summary)
+            info = { 'loss': loss.item(), 'accuracy': accuracy.item() }
+
+            for tag, value in info.items():
+                logger.scalar_summary(tag, value, epoch+1)
+
+            # 2. Log values and gradients of the parameters (histogram summary)
+            # curious to see if this works!
+            for tag, value in model.named_parameters():
+                tag = tag.replace('.', '/')
+                logger.histo_summary(tag, value.data.cpu().numpy(), epoch+1)  # might have to be value.data.gpu() ... but not sure
+                logger.histo_summary(tag+'/grad', value.grad.data.cpu().numpy(), epoch+1)
+
+
+            # thats a good sign!
+
+            # yeah that makes sense
+            # 3. Log training images (image summary)
+            # info = { 'images': images.view(-1, 28, 28)[:10].cpu().numpy() }
+
+            # for tag, images in info.items():
+                # logger.image_summary(tag, images, epoch+1)
 
         if epoch % (EPOCHS/100) == 0:
             print('-'*100)

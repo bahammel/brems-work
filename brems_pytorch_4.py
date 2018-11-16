@@ -11,7 +11,7 @@ torch.set_default_tensor_type('torch.cuda.FloatTensor')
 # torch.set_default_tensor_type('torch.FloatTensor')
 
 BATCH_SZ, D_in_1, H, D_out = 32, 2, 1600, 2
-EPOCHS = 200000
+EPOCHS = 1000000
 
 
 if __name__ == '__main__':
@@ -21,13 +21,17 @@ if __name__ == '__main__':
         torch.nn.Sigmoid(),
         torch.nn.Linear(H, H),
         torch.nn.Sigmoid(),
+        torch.nn.Linear(H, H),
+        torch.nn.Sigmoid(),
+        torch.nn.Linear(H, H),
+        torch.nn.Sigmoid(),
         torch.nn.Linear(H, D_out),
     )
     model.cuda()
 
     loss_fn = torch.nn.MSELoss()
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, min_lr=1e-6, patience=200, factor=.2
     )
@@ -60,7 +64,6 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
             lr_scheduler.step(loss)
-            optim.param_groups[0]['lr']
 
         # y_pred = model(xtest)
 

@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sklearn
 from sklearn.model_selection import train_test_split
-import torch
 
 
 Z = 1.
@@ -12,7 +11,7 @@ Z = 1.
 
 def brems(ne, kTe, Z, x):
     kTe *= 1.e3
-    y = 1.e40 * 1.e-5 * 5.34e-39 * Z**2. * (ne)**2.* (1.6e-12 * kTe)**-0.5 * np.exp(-x/kTe)    
+    y = (1.e40 * 1.e-5 * 5.34e-39 * Z**2. * (ne)**2.* (1.6e-12 * kTe)**-0.5 * np.exp(-x/kTe))**0.25  
     return y
 
 
