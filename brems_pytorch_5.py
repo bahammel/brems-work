@@ -18,7 +18,7 @@ torch.set_default_tensor_type(
     'torch.cuda.FloatTensor' if USE_GPU else 'torch.FloatTensor'
 )
 
-BATCH_SZ, D_in_1, H, D_out = 32, 2, 1600, 2
+BATCH_SZ, D_in_1, H, D_out = 32, 2, 200, 2
 EPOCHS = 10_000
 
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
             test_losses = []
             for batch_idx in range(len(xtest) // BATCH_SZ):
                 x_batch = xtest[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
-                y_batch = xtest[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
+                y_batch = ytest[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
 
                 y_pred = model(x_batch)
 
