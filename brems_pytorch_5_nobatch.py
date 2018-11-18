@@ -8,8 +8,6 @@ from logger import Logger
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.utils import shuffle
 
-torch.set_printoptions(precision=3) #this doesn't seem to do anything
-
 
 plt.ion()
 plt.close('all')
@@ -21,7 +19,7 @@ torch.set_default_tensor_type(
     'torch.cuda.FloatTensor' if USE_GPU else 'torch.FloatTensor'
 )
 
-BATCH_SZ, D_in_1, H, D_out = 64, 2, 1600, 2
+BATCH_SZ, D_in_1, H, D_out = 32, 2, 800, 2
 EPOCHS = 10_000
 
 
@@ -29,18 +27,9 @@ if __name__ == '__main__':
     model = torch.nn.Sequential(
         torch.nn.BatchNorm1d(2),
         torch.nn.Linear(D_in_1, H),
-        #torch.nn.Sigmoid(),
-        torch.nn.Tanh(),
-        #torch.nn.LeakyReLU(),
+        torch.nn.Sigmoid(),
         torch.nn.Linear(H, H),
-        #torch.nn.Sigmoid(),
-        torch.nn.Tanh(),
-        torch.nn.Linear(H, H),
-        torch.nn.Tanh(),
-        #torch.nn.LeakyReLU(),
-        torch.nn.Linear(H, H),
-        torch.nn.Tanh(),
-        #torch.nn.LeakyReLU(),
+        torch.nn.Sigmoid(),
         torch.nn.Linear(H, D_out),
     )
 
@@ -50,9 +39,9 @@ if __name__ == '__main__':
     loss_fn = torch.nn.MSELoss()
     best_loss = float('inf')
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=0.0)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, min_lr=1e-9, patience=100, factor=0.5, verbose=True,
+        optimizer, min_lr=1e-6, patience=200, factor=.5, verbose=True,
     )
 
     experiment_id = datetime.now().isoformat()
@@ -74,21 +63,22 @@ if __name__ == '__main__':
         Ytest = torch.Tensor(ytest)
 
         train_losses = []
-        for batch_idx in range(len(xtrain) // BATCH_SZ):
-            x_batch = Xtrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
-            y_batch = Ytrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
+        # for batch_idx in range(len(xtrain) // BATCH_SZ):
+        #x_batch = Xtrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
+        #y_batch = Ytrain[batch_idx*BATCH_SZ:(batch_idx+1)*BATCH_SZ]
+        x_batch = Xtrain[epoch_idx*BATCH_SZ:(epoch_idx+1)*BATCH_SZ]
+        y_batch = Ytrain[epoch_idx*BATCH_SZ:(epoch_idx+1)*BATCH_SZ]
 
-            y_pred = model(x_batch)
+        y_pred = model(x_batch)
 
-            loss = loss_fn(y_pred, y_batch)
+        loss = loss_fn(y_pred, y_batch)
 
-            optimizer.zero_grad()
-            loss.backward()
+        optimizer.zero_grad()
+        loss.backward()
 
-            train_losses.append(loss.item())
+        train_losses.append(loss.item())
 
-            optimizer.step()
-        
+        optimizer.step()
         lr_scheduler.step(loss)
 
         # y_pred = model(xtest)
@@ -105,8 +95,8 @@ if __name__ == '__main__':
         if epoch % 10 == 0:
             _train_loss = np.mean(train_losses)
             train_loss = loss.item()
-            print(f"epoch: {epoch}, train losses: {train_losses}")
-            print(f"epoch: {epoch}, mean train loss: {train_loss}")
+
+            print(f"epoch: {epoch}, train loss: {train_loss}")
 
             lrs = set([layer['lr'] for layer in optimizer.param_groups])
 
@@ -137,16 +127,16 @@ if __name__ == '__main__':
 
     fig = plt.figure(dpi=100, figsize=(5, 4))
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(Xtest[:,0], Ytest[:,0], Xtest[:,1], c='r', marker='o')
-    ax.scatter(Xtest[:,0], I_[:,0].detach().squeeze(-1), Xtest[:,1], c='m')
+    ax.scatter(xtest[:,0], ytest[:,0], xtest[:,1], c='r', marker='o')
+    ax.scatter(xtest[:,0], I_[:,0].detach().squeeze(-1), xtest[:,1], c='m')
     ax.set_xlabel('hu (xtest[:,0])')
     ax.set_ylabel('kTe (ytest[:,0])')
     ax.set_zlabel('Int (xtest[:,1])')
 
     fig = plt.figure(dpi=100, figsize=(5, 4))
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(Xtest[:,0], Ytest[:,0], Xtest[:,1], c='r', marker='o')
-    ax.scatter(Xtest[:,0], I_[:,1].detach().squeeze(-1), Xtest[:,1], c='m')
+    ax.scatter(xtest[:,0], ytest[:,0], xtest[:,1], c='r', marker='o')
+    ax.scatter(xtest[:,0], I_[:,1].detach().squeeze(-1), xtest[:,1], c='m')
     ax.set_xlabel('hu (xtest[:,0])')
     ax.set_ylabel('ne (ytest[:,0])')
     ax.set_zlabel('Int (xtest[:,1])')

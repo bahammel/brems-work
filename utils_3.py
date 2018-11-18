@@ -11,14 +11,14 @@ Z = 1.
 
 def brems(ne, kTe, Z, x):
     kTe *= 1.e3
-    y = (1.e40 * 1.e-5 * 5.34e-39 * Z**2. * (ne)**2.* (1.6e-12 * kTe)**-0.5 * np.exp(-x/kTe))**0.25  
+    y = (1.e40 * 1.e-5 * 5.34e-39 * Z**2. * (ne)**2.* (1.6e-12 * kTe)**-0.5 * np.exp(-(1.e3*x)/kTe))**0.25  #Note I am taking the fourth root to compress range of Intensity
     return y
 
 
 def get_data_3():
     kTe = np.linspace(1, 6, 2)
     ne = np.linspace(1, 3, 2)
-    x = np.linspace(1000, 5000, 81)
+    x = np.linspace(1, 5, 1001)
 
     X = []
     Y = []
@@ -35,7 +35,7 @@ def get_data_3():
 
 def get_data_2():
     kTe = np.linspace(1, 6, 2)
-    x = np.linspace(1000, 5000, 51)
+    x = np.linspace(1000, 5000, 501)
 
     X = []
     Y = []
