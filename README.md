@@ -19,7 +19,7 @@
 
 ### Seeing a file from past work
 
-`git show <branch_name>:<file_name> | less`  -- read through the file  
+`git show <branch_name>:<file_name>`  -- read through the file  
 `git show <branch_name>:<file_name> > <new_file.py>`  -- Save the old file as 'new_file'  
 
 
