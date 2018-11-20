@@ -2,7 +2,7 @@
 
 ## Seeing changes since last save
 
-`git stats` -- show what files have been changed  
+`git status` -- show what files have been changed  
 `git diff` -- show the changes made to those files  
 
 ## Save work
