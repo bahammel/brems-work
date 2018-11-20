@@ -9,7 +9,7 @@
 
 `git add .` -- Stage all of the files to be saved  
 `git add <file_name>` -- Stage a single file to be saved  
-`git commit` -- Save file  
+`git commit` -- Save everything that's been stagged  
 
 ## Seeing past work
 
