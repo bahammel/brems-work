@@ -21,7 +21,7 @@ torch.set_default_tensor_type(
     'torch.cuda.FloatTensor' if USE_GPU else 'torch.FloatTensor'
 )
 
-BATCH_SZ, D_in_1, H, D_out = 64, 2, 800, 2
+BATCH_SZ, D_in_1, H, D_out = 64, 2, 400, 2
 EPOCHS = 10_000
 
 
