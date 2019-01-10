@@ -2,10 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sklearn
 from sklearn.model_selection import train_test_split
+from torch.utils import data as data_utils
+import torch
 
 Z = 1.
 # ne = 1.
 # ni = ne
+
+torch.set_default_tensor_type(
+    'torch.cuda.FloatTensor' if torch.cuda.is_available() else 'torch.FloatTensor'
+)
 
 
 def brems(ne, kTe, Z, x):
@@ -16,8 +22,8 @@ def brems(ne, kTe, Z, x):
 
 def get_data_3():
     kTe = np.linspace(1, 6, 2)
-    ne = np.linspace(1, 10, 1)
-    x = np.linspace(1, 5, 1001)
+    ne = np.linspace(1, 10, 2)
+    x = np.linspace(1, 5, 11)
 
     X = []
     Y = []
@@ -26,10 +32,11 @@ def get_data_3():
         for k in ne:
             for i in x:
                 Y.append([t,k])
-                X.append([i, brems(k, t, Z, i)])
-
+                X.append([brems(k, t, Z, i)]
     xtrain, xtest, ytrain, ytest = train_test_split(X, Y)
+
     return map(np.asarray, [xtrain, xtest, ytrain, ytest])
+
 
 
 def get_data_2():
